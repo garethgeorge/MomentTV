@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/3.2.0/dash.all.min.js"
+      integrity="sha512-wFaKU7BcXbvVVGi0vDUKv4GXc9Hrp4RjGZorG8KlpRurhpvgCXiLhcafCj3y/gKY5CKAuyu00b+BvJ+vyRD0Pg=="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <style>
+    body {
+      background-color: black;
+      width: 100%;
+      height: 100%;
+      margin: 0px;
+      padding: 0px;
+    }
+    #player_id {
+      margin: 0px;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+  </style>
+  <body>
+    <video id="player_id" controls autoplay muted></video>
+  </body>
+  <script>
+    const url = "/live/app/manifest.mpd";
+    const video = document.querySelector("video");
+    const player = dashjs.MediaPlayer().create();
+    player.initialize(video, url, true);
+    player.updateSettings({
+      streaming: {
+        liveDelay: 1,
+        liveCatchUpMinDrift: 0.05,
+        liveCatchUpPlaybackRate: 0.5,
+        stableBufferTime: 1,
+        bufferTimeAtTopQuality: 1,
+        bufferTimeAtTopQualityLongForm: 1,
+        bufferToKeep: 1,
+        bufferAheadToKeep: 1,
+        lowLatencyEnabled: true,
+        fastSwitchEnabled: true,
+        abr: {
+          limitBitrateByPortal: true,
+        },
+      },
+    });
+    // player.updateSettings({
+    //   streaming: { lowLatencyEnabled: true }});
+    // player.updateSettings({
+    //   liveDelay: 1,
+    //   liveCatchup: {
+    //     enabled: true,
+    //     minDrift: 0.05,
+    //     playbackRate: 1,
+    //     latencyThreshold: 2,
+    //   },
+    //   lowLatencyEnabled: true,
+    // });
+  </script>
+</html>
