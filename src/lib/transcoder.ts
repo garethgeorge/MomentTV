@@ -13,17 +13,19 @@ export default class Transcoder extends EventEmitter {
   private rtmpAddress: string;
   private transcoderOptions: TranscoderOptions;
   private manifestUrl: string;
+  private secret: string;
   
-  constructor(rtmpAddress: string, manifestUrl: string, transcoderOptions: TranscoderOptions = {
+  constructor(rtmpAddress: string, manifestUrl: string, secret: string, transcoderOptions: TranscoderOptions = {
     "bitrate": "4000k",
     "audioBitrate": "128k",
     "preset": "fast",
   }) {
     super();
-    this.transcoderOptions = transcoderOptions;
-    this.rtmpAddress = rtmpAddress;
     this.ffmpegProc = null;
+    this.rtmpAddress = rtmpAddress;
     this.manifestUrl = manifestUrl;
+    this.secret = secret;
+    this.transcoderOptions = transcoderOptions;
   }
 
   async listenAndEncode() {
@@ -33,8 +35,8 @@ export default class Transcoder extends EventEmitter {
         "-c:v", "libx264", 
         "-profile:v", "high", "-preset", this.transcoderOptions.preset, "-bf", "0", "-refs", "3", "-sc_threshold", "0",
         "-b:v", this.transcoderOptions.bitrate,
-        "-g", "150",
-        "-keyint_min", "150",
+        "-g", "300",
+        "-keyint_min", "300",
         "-preset", this.transcoderOptions.preset,
         "-c:a", "aac", "-b:a", this.transcoderOptions.audioBitrate,
         "-b_strategy", "0", "-sc_threshold", "0", "-pix_fmt", "yuv420p",
@@ -46,7 +48,8 @@ export default class Transcoder extends EventEmitter {
         "-window_size", "10",
         "-extra_window_size", "20",
         "-remove_at_exit", "1", "-streaming", "1",
-        "-ldash", "1",
+        // "-ldash", "1",
+        "-headers", "Secret:" + this.secret,
         "-f", "dash", this.manifestUrl,
       ]);
 
