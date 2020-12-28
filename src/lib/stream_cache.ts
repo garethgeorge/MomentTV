@@ -19,12 +19,19 @@ export default class StreamCache {
   pipe(stream: stream.Writable) {
     // catch up by writing the existing buffers, they should hopefully be small enough to bufer in memory
     for (const buffer of this.buffers) {
-      stream.write(buffer);
+      stream.write(buffer, "binary");
     }
     if (this.ended) {
       stream.end();
-    } else
-      this.stream.pipe(stream);
+    } else {
+      this.stream.on("data", data => {
+        stream.write(data, "binary");
+      });
+      this.stream.on("end", () => {
+        stream.end();
+      });
+    }
+      
   }
 
   data(): Buffer {
