@@ -5,6 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "argparse": "^2.0.1",
+    "axios": "^0.21.1",
+    "eventemitter3": "^4.0.7",
     "express": "^4.17.1",
     "mkdirp": "^1.0.4",
     "morgan": "^1.10.0",
@@ -20,8 +22,8 @@
     "typescript": "^4.1.3"
   },
   "scripts": {
-    "start": "ts-node src/app.ts",
-    "start-prod": "node dist/src/app.js",
+    "start": "ts-node src/server/app.ts",
+    "start-prod": "node dist/src/server/app.js",
     "build": "tsc",
     "docker-build": "tsc && docker build -t lastpenguin/harmony-live-stream ."
   },

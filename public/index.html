@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>HarmonyStream</title>
+    <link rel="stylesheet" href="./css/ControlBar.css">
   </head>
   <style>
     body {
@@ -51,6 +52,40 @@
   </style>
   <body>
     <video id="player_id" controls autoplay muted></video>
+    <!-- <div class="dash-video-player ">
+        <div class="videoContainer" id="videoContainer">
+            <video preload="auto" autoplay="" id="player_id"> </video>
+            <div id="videoController" class="video-controller unselectable">
+                <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                    <span id="iconPlayPause" class="icon-play"></span>
+                </div>
+                <span id="videoTime" class="time-display">00:00:00</span>
+                <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                    <span class="icon-fullscreen-enter"></span>
+                </div>
+                <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                    <span class="icon-bitrate"></span>
+                </div>
+                <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01">
+                <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                    <span id="iconMute" class="icon-mute-off"></span>
+                </div>
+                <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                    <span class="icon-tracks"></span>
+                </div>
+                <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                    <span class="icon-caption"></span>
+                </div>
+                <span id="videoDuration" class="duration-display">00:00:00</span>
+                <div class="seekContainer">
+                    <div id="seekbar" class="seekbar seekbar-complete">
+                        <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                        <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
     <div id="chat">
       <h2 style="text-align: center">Chat</h2>
       <div id="messagearea">[chat feed start]</div>
@@ -71,11 +106,12 @@
     crossorigin="anonymous"
   ></script>
   <script src="./js/lib.js"></script>
+  <script src="./js/ControlBar.js"></script>
   <script>
     const socket = io();
     let username = null;
 
-    const url = "/live/app/manifest.mpd";
+    const url = "/stream/live/default.mpd";
     const video = document.querySelector("video");
     const player = dashjs.MediaPlayer().create();
     player.initialize(video, url, true);
@@ -120,7 +156,7 @@
       }
     });
 
-    socket.on("connect", async () => {
+    socket.once("connect", async () => {
       socket.on("message", (username, message) => {
         const elem = document.createElement("span");
         elem.innerHTML = `
