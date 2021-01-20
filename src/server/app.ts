@@ -14,7 +14,6 @@ import axios, { AxiosResponse } from "axios";
 
 const TAG = "[HarmonyStream][main]";
 const exists = util.promisify(fs.exists);
-const stat = util.promisify(fs.stat);
 
 /*
   process the arguments
@@ -22,12 +21,20 @@ const stat = util.promisify(fs.stat);
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIO.Server(server);
+if (config.mirrorOptions) {
+  console.log(TAG + " mirror is currently under development.");
+  process.exit(1);
+}
+
 
 const tmpDir = config.tmpDir;
 app.set("trust proxy", true);
 app.use(morgan("common"));
 
+// cache chunks that are currently being uploaded in memory
 const memCache: { [path: string]: StreamCache } = {};
+// list of files created by the app, deleted when the stream ends
+let createdFiles: { [path: string]: boolean } = {}; 
 
 app.post("/upload/:secret/*", async (req, res) => {
   const reqPath = "/" + req.params["0"];
@@ -47,12 +54,15 @@ app.post("/upload/:secret/*", async (req, res) => {
 
   req.on("close", async () => {
     await mkdirp(dirName);
-    streamCache.pipe(fs.createWriteStream(tmpDir + reqPath));
-
-    res.end();
-    setTimeout(() => {
-      delete memCache[reqPath];
-    }, 1000);
+    const writeStream = fs.createWriteStream(tmpDir + reqPath);
+    createdFiles[tmpDir + reqPath] = true;
+    streamCache.pipe(writeStream);
+    writeStream.on("finish", () => {
+      res.end();
+      setTimeout(() => {
+        delete memCache[reqPath];
+      }, 1000);
+    });
   });
 });
 
@@ -87,9 +97,7 @@ app.get("/stream/*", async (req, res) => {
     res.status(200);
     cachedChunk.pipe(res);
   } else if (
-    !config.mirrorOptions &&
-    (await exists(tmpDir + reqPath)) &&
-    (await stat(tmpDir + reqPath)).isFile()
+    !config.mirrorOptions && createdFiles[tmpDir + reqPath]
   ) {
     res.status(200);
     fs.createReadStream(tmpDir + reqPath).pipe(res);
@@ -110,7 +118,6 @@ app.get("/stream/*", async (req, res) => {
           resp = await axios.get(config.mirrorOptions.url + "/stream" + reqPath, {
             responseType: "stream",
           });
-          console.log("request took: " + (new Date().getTime() - time));
         } catch (e) {
           if (e.response) {
             resp = e.response as AxiosResponse<any>;
@@ -138,14 +145,25 @@ app.get("/stream/*", async (req, res) => {
 
 app.use(express.static("./public"));
 
-let connectedClients = 0;
+/*
+  handle socket io connections
+*/
+let connectedClients: number = 0;
 const broadcastNumUsers = () => {
   io.emit("message", "[system]", connectedClients + " users connected");
 };
 
 io.on("connection", (socket: SocketIO.Socket) => {
   connectedClients++;
+  
+  socket.emit("streamInfo", {
+    name: config.streamOptions.name,
+  });
+  
   socket.on("message", (username, message) => {
+    if (username.length > 20 || username === "") {
+      socket.emit("message", "[system]", "invalid username");
+    }
     io.emit("message", username, message);
   });
 
@@ -160,6 +178,18 @@ io.on("connection", (socket: SocketIO.Socket) => {
 /*
   start listening & launch transcoder service
 */
+const clearCreatedFiles = () => {
+  // clear out the files from the last run
+  const createdFileList = Object.keys(createdFiles);
+  console.log(TAG + " unlinking " + createdFileList.length + " files from previous run.");
+  for (const file of createdFileList) {
+    try {
+      fs.unlinkSync(file);
+    } catch (e) {}
+  }
+  createdFiles = {};
+}
+
 server.listen(config.webServerPort, async () => {
   console.log(TAG + " listening on " + config.webServerPort);
 
@@ -171,11 +201,13 @@ server.listen(config.webServerPort, async () => {
       config.streamOptions,
       "http://localhost:" + config.webServerPort + "/upload/" + config.uploadSecret + "/live"
     );
-
+    
     while (true) {
       console.log(TAG + " starting transcoder listening on: " + config.rtmpIngestAddress);
       await transcoder.listenAndEncode();
       console.log(TAG + " transcoder died, restart in 5 seconds.");
+
+      clearCreatedFiles();
       await new Promise((accept) => {
         setTimeout(accept, 5000);
       });
@@ -187,4 +219,8 @@ server.listen(config.webServerPort, async () => {
   if (config.mirrorOptions) {
     console.log(TAG + " configured to mirror " + config.mirrorOptions.url);
   }
+});
+
+process.on("beforeExit", () => {
+  clearCreatedFiles();
 });

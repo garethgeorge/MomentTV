@@ -9,39 +9,61 @@ const TAG = "[HarmonyStream][config]";
 /*
   config file structure
 */
+
+interface Moderator {
+  isAdmin: boolean;
+  username: string;
+  password: string;
+};
+
 interface Config {
   version: string;
   uploadSecret?: string;
   streamOptions?: StreamOptions;
   mirrorOptions?: {
     url: string;
-  };
+  },
+  redis?: {
+    host: string,
+    port: number
+  },
   tmpDir: string;
   rtmpIngestAddress?: string;
   webServerPort: number;
+  moderators: Moderator[];
 }
 
 const defaultConfig: Config = {
   version: "v1.0",
   streamOptions: {
     name: "default",
+    codec: "copy",
+    /*
     codec: "h264",
     h264opts: {
       bitrate: 2000,
       fps: 30,
       preset: "fast",
     },
+    */
     audioBitrate: 128,
     segmentDuration: 10,
   },
   mirrorOptions: null,
   // location to store temporary fragments of the generated video
-  tmpDir: "/tmp/harmonystream",
+  tmpDir: "/tmp/momentlive",
   // the address that the RTMP server listens on for the stream to be uploaded
   // see ffmpeg docs for valid URLs
   rtmpIngestAddress: "rtmp://0.0.0.0:1935/live/default",
   // port that the web server listens on
   webServerPort: 5000,
+  moderators: [
+    {
+      isAdmin: true,
+      username: "admin",
+      password: crypto.randomBytes(4).toString("hex"),
+    }
+  ],
 };
 
 /*
@@ -66,10 +88,14 @@ const args = parser.parse_args();
 let config: Config = defaultConfig;
 
 if (!fs.existsSync(args.config)) {
-  fs.writeFileSync(args.config, JSON.stringify(config, null, 2));
   console.log(
     TAG + " config not found at path " + args.config + ", generating new config from defaults"
   );
+  try {
+    fs.writeFileSync(args.config, JSON.stringify(config, null, 2));
+  } catch (e) {
+    console.log(TAG + " WARNING: unable to write default config to path " + args.config);
+  }
 } else {
   try {
     config = JSON.parse(fs.readFileSync(args.config).toString("utf8"));

@@ -7,7 +7,7 @@ const TAG = "[HarmonyStream][transcoder]";
 export interface StreamOptions {
   name: string;
   codec: "h264" | "copy";
-  h264opts: {
+  h264opts?: {
     fps: number; // fps
     bitrate: number; // video bitrate kbit/sec
     preset: string; // ffmpeg preset
@@ -42,6 +42,7 @@ export default class Transcoder extends EventEmitter {
       const keyFrameInterval = this.options.segmentDuration * this.options.h264opts.fps;
       // prettier-ignore
       videoEncodeOptions = [
+        "-c:v", "h264",
         "-r", "" + this.options.h264opts.fps,
         "-g", '' + keyFrameInterval,
         "-keyint_min", '' + keyFrameInterval,

@@ -1,12 +1,10 @@
 import stream from "stream";
 
 export default class StreamCache {
-  private stream: stream.Stream;
   private buffers: Buffer[];
-  private destinations: stream.Writable[];
+  private destinations: stream.Writable[] | null;
   private ended: boolean;
   constructor(stream: stream.Readable, flushIntervalMs: number = 100) {
-    this.stream = stream;
     this.buffers = [];
     this.destinations = [];
     this.ended = false;
@@ -39,6 +37,7 @@ export default class StreamCache {
       for (const dest of this.destinations) {
         dest.end();
       }
+      this.destinations = null;
     });
   }
 
