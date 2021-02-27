@@ -1,6 +1,6 @@
 import io from "socket.io-client";
 
-export const socket = io("./");
+export const socket = io();
 
 export const awaitConnected = async () => {
   return new Promise((accept, reject) => {

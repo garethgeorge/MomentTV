@@ -1,0 +1,40 @@
+
+// Pure CSS Play Icon from 
+// https://codepen.io/devert/pen/bEgqoB
+$play-border-color: #fff
+button.icon-play
+  position: absolute
+  width: 100px
+  height: 100px
+  border: solid 2px $play-border-color
+  border-radius: 100px
+  top: 50%
+  left: 50%
+  transform: translate(-50px, -50px)
+  z-index: 10
+  background-color: rgba(0, 0, 0, 0.5)
+
+  &:before
+    content: ""
+    width: 34px
+    height: 53px
+    border-left: 2px solid $play-border-color
+    border-radius: 5px
+    position: absolute
+    top: 23px
+    left: 37px
+
+  &:after
+    content: ""
+    position: absolute
+    top: 27px
+    left: 19px
+    width: 42px
+    height: 42px
+    transform: rotate(45deg) skew(-5deg, -5deg)
+    border-top: 2px solid $play-border-color
+    border-right: 2px solid $play-border-color
+    border-radius: 5px
+
+  &:hover
+    background-color: rgba(255, 153, 0, 0.2)

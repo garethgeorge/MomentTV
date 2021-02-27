@@ -1,12 +1,15 @@
 import React, { useState, useRef } from "react";
 import dashjs from "dashjs";
+import {Expand} from "grommet-icons/icons/Expand";
+import "../sass/icon_play.sass";
 
 export default () => {
   const [playing, setPlaying] = useState(false);
+  const wrapper = useRef(null);
   let videoDom;
 
   return (
-    <div>
+    <div ref={wrapper}>
       {!playing ? (
         <button
           className="icon-play"
@@ -42,6 +45,28 @@ export default () => {
           } as any);
         }}
       ></video>
+      <button
+        className="invisible"
+        style={{ position: "absolute", bottom: "5px", right: "5px" }}
+        onClick={() => {
+          let fullscreenElem = document.fullscreenElement;
+          if (fullscreenElem) {
+            // release fullscreen 
+            document.exitFullscreen();
+          } else {
+            // request fullscreen 
+            if (wrapper.current.requestFullscreen) {
+              wrapper.current.requestFullscreen();
+            } else if (wrapper.current.webkitRequestFullscreen) {
+              wrapper.current.webkitRequestFullscreen();
+            } else if (wrapper.current.msRequestFullscreen) {
+              wrapper.current.msRequestFullscreen();
+            }
+          }
+        }}
+      >
+        <Expand size="medium" color="white" style={{opacity: 0.4}}></Expand>
+      </button>
     </div>
   );
 };

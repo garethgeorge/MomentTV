@@ -29,6 +29,7 @@ interface Config {
   },
   tmpDir: string;
   rtmpIngestAddress?: string;
+  chunkGcTime: number;
   webServerPort: number;
   moderators: Moderator[];
 }
@@ -55,6 +56,7 @@ const defaultConfig: Config = {
   // the address that the RTMP server listens on for the stream to be uploaded
   // see ffmpeg docs for valid URLs
   rtmpIngestAddress: "rtmp://0.0.0.0:1935/live/default",
+  chunkGcTime: 600,
   // port that the web server listens on
   webServerPort: 5000,
   moderators: [

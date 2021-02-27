@@ -62,6 +62,8 @@ app.post("/upload/:secret/*", async (req, res) => {
       setTimeout(() => {
         delete memCache[reqPath];
       }, 1000);
+
+      // TODO: create timer to unlink after config.chunkGcTime
     });
   });
 });
